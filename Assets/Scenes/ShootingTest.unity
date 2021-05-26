@@ -554,7 +554,7 @@ MonoBehaviour:
   maxBullets: 6
   bullets: 6
   currentBullets: {fileID: 452015506}
-  fpsCam: {fileID: 959308592}
+  muzzlePoint: {fileID: 959308587}
   fireRate: 15
   VoiceCommand: reload
 --- !u!65 &683108282
