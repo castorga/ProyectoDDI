@@ -10,6 +10,8 @@ public class Gun : MonoBehaviour
     public TextMeshPro currentBullets;
     public GameObject muzzlePoint;
     public float fireRate = 2f;
+    private float muzzleLifetime = 0.05f;
+    private float muzzleTime = 0f;
     public Animator animator;
     private float nextTimeToFire = 0f;
     public string VoiceCommand = "reload";
@@ -18,6 +20,12 @@ public class Gun : MonoBehaviour
     private bool isReloading = false;
     public GameObject laser;
     public Material defaultMaterial;
+    private bool hasFired = false;
+    public GameObject muzzleFlash;
+    public AudioSource audioSource = null;
+    public AudioClip fireAudioClip;
+    public AudioClip noAmmoAudioClip;
+    public AudioClip reloadAudioClip;
     
 
     private void Awake() {
@@ -32,11 +40,17 @@ public class Gun : MonoBehaviour
     {
         if((Google.XR.Cardboard.Api.IsTriggerPressed || Input.GetMouseButtonDown(0)) && (bullets > 0) && (Time.time >= nextTimeToFire)){
             nextTimeToFire = Time.time + 1f / fireRate;
+            muzzleTime = Time.time + muzzleLifetime;
             if(animator.GetBool("isIdle")) {
                 animator.Play("Armature|Fire");
             }
+            hasFired = true;
+            muzzleFlash.SetActive(true);
+            playSound(fireAudioClip);
             Shoot();
             bullets -= 1;
+        } else if ((Google.XR.Cardboard.Api.IsTriggerPressed || Input.GetMouseButtonDown(0)) && (bullets == 0)) {
+            playSound(noAmmoAudioClip);
         }
         if(isReloading) {
             if(Time.time >= nextReload) {
@@ -45,8 +59,13 @@ public class Gun : MonoBehaviour
                 laser.SetActive(true);
             }
         }
+        if(hasFired && (Time.time >= muzzleTime)) {
+            hasFired = false;
+            muzzleFlash.SetActive(false);
+        }
         currentBullets.SetText(bullets.ToString());
     }
+
 
     void Shoot(){
         RaycastHit hit;
@@ -64,10 +83,18 @@ public class Gun : MonoBehaviour
         bullets = maxBullets;
     }
 
+    private void playSound(AudioClip sound) {
+        if(audioSource != null)
+            audioSource.PlayOneShot(sound, 0.2f);
+    }
+
     public void OnVoiceCommandRecognized(string command){
         Debug.Log(command);
         if(command.ToLower().Contains(VoiceCommand.ToLower()) && bullets < maxBullets){
             animator.Play("Armature|Reload");
+            if(!isReloading) {
+                playSound(reloadAudioClip);
+            }
             isReloading = true;
             nextReload = Time.time + reloadTime;
             laser.SetActive(false);

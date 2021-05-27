@@ -7,7 +7,10 @@ public class Target : MonoBehaviour
     // 1=head
     // 2=body
     // 3=inocent
+    public AudioSource audioSource;
+    public AudioClip audioClip;
     public int targetType = 1;
+    public List<GameObject> disableAfterShot = new List<GameObject>();
     public void WasShoot(){
         switch(targetType){
             case 1: PlayerScore.score += 5;
@@ -17,6 +20,10 @@ public class Target : MonoBehaviour
             case 3: PlayerScore.score -= 5;
                 break;
         }
-        Destroy(transform.parent.gameObject);
+        audioSource.PlayOneShot(audioClip, 0.5f);
+        //Destroy(transform.parent.gameObject);
+        foreach(GameObject obj in disableAfterShot) {
+            obj.SetActive(false);
+        }
     }
 }
